@@ -48,8 +48,8 @@ public class Game {
 
 				for (State child : childStates) {
 
-					child.calculateState(goal);
-
+					child.calculateH(goal);
+					child.calculateG(bestState);
 					open.add(child);
 				}
 			}
@@ -90,8 +90,7 @@ public class Game {
 		Collections.reverse(columns);
 		
 		
-		clone.setG(-1);
-		clone.calculateState(goal);
+		clone.calculateH(goal);
 		
 		List<State> open = new ArrayList<>();
 		
@@ -189,7 +188,7 @@ public class Game {
 	 * @param result
 	 */
 	private void printResult(State result) {
-		System.out.print("\n================>Step to goal:");
+		System.out.print("\n================>Step to goal reverse:");
 
 		int step = 0;
 		while (result != null) {

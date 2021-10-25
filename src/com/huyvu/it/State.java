@@ -81,7 +81,7 @@ public class State implements Comparable<State> {
 	}
 
 	public void print() {
-		System.out.print("\n++++++++++++++++");
+		System.out.print("\n^^^^^^^^^^^^^^");
 		columns.forEach(e -> {
 			System.out.print("\n|");
 			e.forEach(System.out::print);
@@ -104,13 +104,11 @@ public class State implements Comparable<State> {
 	}
 
 	/**
-	 * Calculate H and G
+	 * Calculate H
 	 * 
 	 * @param goal
 	 */
-	public void calculateState(State goal) {
-
-		this.g++;
+	public void calculateH(State goal) {
 
 		// Must clone because of pointer
 		State thisState = new State(this);
@@ -201,6 +199,16 @@ public class State implements Comparable<State> {
 	 */
 	public void setFather(State father) {
 		this.father = father;
+	}
+
+	/**
+	 * Calculate G
+	 * 
+	 * @param bestState
+	 */
+	public void calculateG(State bestState) {
+		this.g = bestState.g + 1;
+
 	}
 
 }
