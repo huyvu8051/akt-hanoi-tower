@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+/**
+ * @author huyvu
+ * @Since Oct 25, 2021
+ */
 public class State implements Comparable<State> {
 	private List<Stack<Plate>> columns;
 	private int g;
@@ -35,6 +39,10 @@ public class State implements Comparable<State> {
 		this.h = state.h;
 	}
 
+	public void setG(int g) {
+		this.g = g;
+	}
+
 	/**
 	 * Move plate between columns
 	 * 
@@ -63,11 +71,13 @@ public class State implements Comparable<State> {
 	}
 
 	public void printWithStatus() {
-		System.out.print("\n\n\nStatus:");
-		System.out.print("\n f = " + getF());
-		System.out.print(", g = " + g);
-		System.out.print(", h = " + h);
 		print();
+		System.out.print("\nState: ");
+
+		System.out.print("g = " + g);
+		System.out.print(", h = " + h);
+		// System.out.print(", f = " + getF());
+
 	}
 
 	public void print() {
@@ -76,7 +86,6 @@ public class State implements Comparable<State> {
 			System.out.print("\n|");
 			e.forEach(System.out::print);
 		});
-		System.out.print("\n++++++++++++++++");
 
 	}
 
@@ -86,33 +95,56 @@ public class State implements Comparable<State> {
 
 	@Override
 	public int compareTo(State o) {
-		return o.getF() - this.getF();
+		return this.getF() - o.getF();
 	}
 
+	@Override
+	public int hashCode() {
+		return columns.hashCode();
+	}
+
+	/**
+	 * Calculate H and G
+	 * 
+	 * @param goal
+	 */
 	public void calculateState(State goal) {
 
-		this.g ++;
+		this.g++;
 
+		// Must clone because of pointer
 		State thisState = new State(this);
-
 		State goalState = new State(goal);
 
 		Stack<Plate> currentColumn = thisState.columns.get(2);
 		Stack<Plate> goalColumn = goalState.columns.get(2);
 
-		int h = 0;
-
-		for (int i = 0; i < goalColumn.size(); i++) {
+		int n = goalColumn.size(); // number of all plate
+		int m = 0; // number of right position plate
+		for (int i = 0; i < n; i++) {
 			try {
 				if (currentColumn.get(i).equals(goalColumn.get(i))) {
-					h++;
+					m++;
+
 				}
 			} catch (Exception e) {
 				break;
 			}
 		}
 
-		this.h = h;
+		int k = 0; // number of false position plate
+
+		for (int i = 0; i < currentColumn.size(); i++) {
+			try {
+				if (!currentColumn.get(i).equals(goalColumn.get(i))) {
+					k++;
+				}
+			} catch (Exception e) {
+				break;
+			}
+		}
+
+		this.h = n - m + k;
 
 	}
 
@@ -130,42 +162,7 @@ public class State implements Comparable<State> {
 
 		State goalState = new State(state);
 
-		for (int j = 0; j < 3; j++) {
-			Stack<Plate> currentColumn = thisState.columns.get(j);
-			Stack<Plate> goalColumn = goalState.columns.get(j);
-			for (int i = 0; i < 3; i++) {
-				Plate currentPlate = null;
-				Plate goalPlate = null;
-
-				try {
-					currentPlate = currentColumn.get(i);
-
-				} catch (Exception e) {
-
-				}
-				try {
-					goalPlate = goalColumn.get(i);
-
-				} catch (Exception e) {
-
-				}
-
-				try {
-
-					if (currentPlate == null && goalPlate == null) {
-						continue;
-					}
-
-					if (!currentPlate.equals(goalPlate)) {
-						return false;
-					}
-				} catch (Exception e) {
-					return false;
-				}
-			}
-		}
-
-		return true;
+		return thisState.columns.equals(goalState.columns);
 	}
 
 	public boolean isNotValid() {
@@ -174,23 +171,22 @@ public class State implements Comparable<State> {
 			Stack<Plate> column = columns.get(i);
 			if (columnIsNotSorted(column)) {
 				return true;
-				
+
 			}
 		}
 
 		return false;
 	}
 
+	@SuppressWarnings("unchecked")
 	private boolean columnIsNotSorted(Stack<Plate> column) {
-	
+
 		Stack<Plate> sorted = (Stack<Plate>) column.clone();
-		sorted.sort((e1, e2)->e1.compareTo(e2));
-		
+		sorted.sort((e1, e2) -> e1.compareTo(e2));
+
 		boolean result = !column.equals(sorted);
-		
-		
+
 		return result;
 	}
-
 
 }
