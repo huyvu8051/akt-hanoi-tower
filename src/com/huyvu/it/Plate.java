@@ -1,7 +1,12 @@
 package com.huyvu.it;
 
+
+/**
+ * @author huyvu
+ * @Since Oct 25, 2021
+ */
 public class Plate implements Comparable<Plate> {
-	private int size;
+	private Integer size;
 	
 	public Plate(int size) {
 		this.size = size;
@@ -27,6 +32,11 @@ public class Plate implements Comparable<Plate> {
 		Plate plate = (Plate) obj;
 		
 		return this.size == plate.size;
+	}
+	
+	@Override
+	public int hashCode() {
+		return size.hashCode();
 	}
 
 	public int getSize() {

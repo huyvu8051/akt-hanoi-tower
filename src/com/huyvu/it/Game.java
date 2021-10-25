@@ -1,101 +1,114 @@
 package com.huyvu.it;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.Stack;
 
+/**
+ * @author huyvu
+ * @Since Oct 25, 2021
+ */
 public class Game {
-	
-	public List<State> stepToGoal;
+
 	public List<State> open;
-	public List<State> closed;
-	public State goal;
-
-	public Game() {
-
-	}
-
-	public Game(int numOfPlate) {
-
-		stepToGoal = new ArrayList<>();
-		open = new ArrayList<>();
-		closed = new ArrayList<>();
-
-		State state = new State();
-		goal = new State();
-		// generate state and finish
-
-		List<Stack<Plate>> stateColumns = new ArrayList<>();
-
-		stateColumns.add(generatePlateStack(numOfPlate));
-		stateColumns.add(new Stack<>());
-		stateColumns.add(new Stack<>());
-
-		state.setColumns(stateColumns);
-
-		List<Stack<Plate>> finishColumns = new ArrayList<>();
-
-		finishColumns.add(new Stack<>());
-		finishColumns.add(new Stack<>());
-		finishColumns.add(generatePlateStack(numOfPlate));
-
-		goal.setColumns(finishColumns);
-
-		open.add(state);
-
-	}
+	public Set<State> closed;
 
 	/**
 	 * Core method
 	 * 
 	 * @return
 	 */
-	public boolean resolve() {
-		State bestState = getBestState();
-		
-		stepToGoal.add(bestState);
+	public State resolve(int numberOfPlate) {
 
-		System.out.println("\n=======bestStatus");
-		bestState.print();
+		final State goal = initGoalState(numberOfPlate);
 
-		closed.addAll(open);
+		open = initOpen(goal);
 
-		System.out.println("\n=======Closed");
-		/*
-		 * closed.forEach(e -> { e.print(); });
-		 */
+		closed = new LinkedHashSet<>();
 
-		open = new ArrayList<>();
+		while (!open.isEmpty()) {
 
-		// closed add
+			State bestState = getBestState();
 
-		System.out.println("\n=======Open");
-		if (bestState.equals(goal)) {
-			return true;
+			open.remove(bestState);
+
+			closed.add(bestState);
+
+			if (bestState.equals(goal)) {
+				return bestState;
+			}
+
+			else {
+				List<State> childStates = generateChildStates(bestState);
+
+				for (State child : childStates) {
+
+					child.calculateState(goal);
+
+					open.add(child);
+				}
+			}
+
 		}
 
-		else {
-			List<State> childState = generateChildStates(bestState);
-
-			childState.forEach(e -> {
-				open.add(e);
-				e.printWithStatus();
-			});
-		}
-
-		return false;
+		return null;
 
 	}
 
 	/**
-	 * generate all child State by father State also calculate G & H in child state
-	 * compared to father
+	 * @param numberOfPlate
+	 * @return
+	 */
+	private State initGoalState(int numberOfPlate) {
+
+		List<Stack<Plate>> finishColumns = new ArrayList<>();
+
+		finishColumns.add(new Stack<>());
+		finishColumns.add(new Stack<>());
+		finishColumns.add(generatePlateStack(numberOfPlate));
+		
+		State goal = new State();
+		goal.setColumns(finishColumns);
+		return goal;
+	}
+
+	/**
+	 * @param numberOfPlate
+	 * @return
+	 */
+	private List<State> initOpen(State goal) {
+		
+		State clone = new State(goal);
+		
+		List<Stack<Plate>> columns = clone.getColumns();
+		
+		Collections.reverse(columns);
+		
+		
+		clone.setG(-1);
+		clone.calculateState(goal);
+		
+		List<State> open = new ArrayList<>();
+		
+		open.add(clone);
+
+		return open;
+
+	}
+
+	/**
+	 * generate all child State by father State and also calculate G & H in child
+	 * state compared to father
 	 * 
-	 * @param state
+	 * @param fatherState
 	 * @return List of State
 	 */
-	public List<State> generateChildStates(State state) {
+	public List<State> generateChildStates(State fatherState) {
 		List<State> childStates = new ArrayList<>();
 
 		for (int i = 0; i < 3; i++) {
@@ -104,28 +117,21 @@ public class Game {
 					continue;
 
 				try {
-					State childState = new State(state);
+					State childState = new State(fatherState);
 					childState.movePlate(i, j);
-					childState.calculateState(goal);
 
 					if (closed.contains(childState)) {
-						System.out.println("movePlate(" + i + ", " + j + ") contains in closed");
 						throw new Exception("Is contains in closed!");
 					}
 
-					// is valid move
-
 					if (childState.isNotValid()) {
-						System.out.println("movePlate(" + i + ", " + j + ") is not valid");
 						throw new Exception("Not valid state!");
 					}
+					childState.setFather(fatherState);
 
-					System.out.println("movePlate(" + i + ", " + j + ") successful");
 					childStates.add(childState);
 
 				} catch (Exception e) {
-					// e.printStackTrace();
-					System.out.println("movePlate(" + i + ", " + j + ") false");
 				}
 			}
 		}
@@ -133,10 +139,14 @@ public class Game {
 		return childStates;
 	}
 
+	/**
+	 * Get the best state in open where F is smallest
+	 * 
+	 * @return
+	 */
 	public State getBestState() {
-		open.sort((e1, e2) -> e1.compareTo(e2));
 
-		State result = open.get(0);
+		State result = open.stream().min(Comparator.comparing(e -> e.getF())).get();
 
 		return result;
 	}
@@ -155,53 +165,39 @@ public class Game {
 		return stack;
 	}
 
-	public void printOpenWithStatus() {
-		this.open.forEach(e -> {
-			e.printWithStatus();
-		});
-	}
-
 	Scanner sc = new Scanner(System.in);
 
 	public void run() {
-		int select = 0, count = 1;
+
+		int numberOfState = 0;
+		State result = null;
 		do {
-			System.out.println("\n++++++++++++++++++++++++++++++++");
-			System.out.println("1.resolve step by step");
-			System.out.println("2.resolve all");
-			System.out.println("3.print step to goal");
-			System.out.println("++++++++++++++++++++++++++++++++");
+			System.out.println("\n***************************");
+			System.out.print("Number of plate: ");
 
-			select = sc.nextInt();
+			numberOfState = sc.nextInt();
 
-			switch (select) {
-			case 1:
-				System.out.println("\n################  solve " + count++ + " time");
-				if (resolve()) {
-					System.out.println("\nFinishGame");
-					return;
-				}
-				break;
-			case 2:
-				System.out.println("\n################  solve " + count++ + " time");
-				boolean b;
-				do {
-					b = resolve();
-					if (b) {
-						System.out.println("\nFinishGame");
-					}
-				}while(!b);
-				break;
-			case 3:
-				System.out.println("\nStep to goal:");
-				stepToGoal.forEach(e->e.print());
-				break;
+			result = resolve(numberOfState);
 
-			default:
-				break;
-			}
+			printResult(result);
 
-		} while (true);
+		} while (numberOfState > 0);
+
+	}
+
+	/**
+	 * @param result
+	 */
+	private void printResult(State result) {
+		System.out.print("\n================>Step to goal:");
+
+		int step = 0;
+		while (result != null) {
+			result.print();
+			result = result.getFather();
+			step++;
+		}
+		System.out.println("\n################  move " + (step - 1) + " time");
 
 	}
 
