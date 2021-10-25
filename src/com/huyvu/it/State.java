@@ -9,6 +9,7 @@ import java.util.Stack;
  * @Since Oct 25, 2021
  */
 public class State implements Comparable<State> {
+	private State father;
 	private List<Stack<Plate>> columns;
 	private int g;
 	private int h;
@@ -76,7 +77,6 @@ public class State implements Comparable<State> {
 
 		System.out.print("g = " + g);
 		System.out.print(", h = " + h);
-		// System.out.print(", f = " + getF());
 
 	}
 
@@ -187,6 +187,20 @@ public class State implements Comparable<State> {
 		boolean result = !column.equals(sorted);
 
 		return result;
+	}
+
+	/**
+	 * @return the father
+	 */
+	public State getFather() {
+		return father;
+	}
+
+	/**
+	 * @param father the father to set
+	 */
+	public void setFather(State father) {
+		this.father = father;
 	}
 
 }
