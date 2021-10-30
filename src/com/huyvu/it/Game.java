@@ -15,7 +15,7 @@ import java.util.Stack;
  */
 public class Game {
 
-	public List<State> open;
+	public Set<State> open;
 	public Set<State> closed;
 
 	/**
@@ -71,9 +71,12 @@ public class Game {
 		finishColumns.add(new Stack<>());
 		finishColumns.add(new Stack<>());
 		finishColumns.add(generatePlateStack(numberOfPlate));
-		
+
 		State goal = new State();
 		goal.setColumns(finishColumns);
+
+		goal.setFather(null);
+
 		return goal;
 	}
 
@@ -81,20 +84,19 @@ public class Game {
 	 * @param numberOfPlate
 	 * @return
 	 */
-	private List<State> initOpen(State goal) {
-		
-		State clone = new State(goal);
-		
-		List<Stack<Plate>> columns = clone.getColumns();
-		
+	private Set<State> initOpen(State goal) {
+
+		State rootState = new State(goal);
+
+		List<Stack<Plate>> columns = rootState.getColumns();
+
 		Collections.reverse(columns);
-		
-		
-		clone.calculateH(goal);
-		
-		List<State> open = new ArrayList<>();
-		
-		open.add(clone);
+
+		rootState.calculateH(goal);
+
+		Set<State> open = new LinkedHashSet<>();
+
+		open.add(rootState);
 
 		return open;
 
@@ -123,9 +125,6 @@ public class Game {
 						throw new Exception("Is contains in closed!");
 					}
 
-					if (childState.isNotValid()) {
-						throw new Exception("Not valid state!");
-					}
 					childState.setFather(fatherState);
 
 					childStates.add(childState);
@@ -176,9 +175,17 @@ public class Game {
 
 			numberOfState = sc.nextInt();
 
+			// start time
+			long t0 = System.nanoTime();
 			result = resolve(numberOfState);
+			// end time
+			long t1 = System.nanoTime();
 
 			printResult(result);
+
+			System.out.println("Number of plate: " + numberOfState);
+			double elapsedTimeInSecond = (double) (t1 - t0) / 1_000_000_000;
+			System.out.println("Elapsed time =" + elapsedTimeInSecond + " seconds");
 
 		} while (numberOfState > 0);
 

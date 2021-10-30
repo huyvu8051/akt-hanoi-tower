@@ -11,8 +11,8 @@ import java.util.Stack;
 public class State implements Comparable<State> {
 	private State father;
 	private List<Stack<Plate>> columns;
-	private int g;
-	private int h;
+	private int g; // chi phí từ trạng thái đầu đến trạng thái n
+	private int h; // chi phí ước lượng heuristic từ trạng thái n đến trạng thái đích
 
 	public State() {
 	}
@@ -60,6 +60,10 @@ public class State implements Comparable<State> {
 		Plate temp = presentColumn.pop();
 
 		destinationColumn.push(temp);
+		
+		if (this.isNotValid()) {
+			throw new Exception("Not valid state!");
+		}
 
 	}
 
@@ -142,7 +146,7 @@ public class State implements Comparable<State> {
 			}
 		}
 
-		this.h = n - m + k;
+		this.h =  k + (n - m);
 
 	}
 
