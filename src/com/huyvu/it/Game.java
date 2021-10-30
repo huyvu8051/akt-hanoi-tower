@@ -146,6 +146,11 @@ public class Game {
 
 		State result = open.stream().min(Comparator.comparing(e -> e.getF())).get();
 
+		System.out.println("\n================================open");
+		open.forEach(State::printWithStatus);
+		System.out.println("\n================================best");
+		result.printWithStatus();
+		
 		return result;
 	}
 
